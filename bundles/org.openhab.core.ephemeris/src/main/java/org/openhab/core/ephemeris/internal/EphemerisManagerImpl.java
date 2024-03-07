@@ -28,6 +28,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,19 +38,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.core.common.ThreadPoolManager;
 import org.openhab.core.config.core.ConfigOptionProvider;
-import org.openhab.core.config.core.ConfigurableService;
 import org.openhab.core.config.core.ParameterOption;
 import org.openhab.core.ephemeris.EphemerisManager;
 import org.openhab.core.i18n.LocaleProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -67,15 +73,19 @@ import de.focus_shift.jollyday.core.util.ResourceUtil;
  *
  * @author Gaël L'hopital - Initial contribution
  */
-@Component(name = "org.openhab.ephemeris", property = Constants.SERVICE_PID + "=org.openhab.ephemeris")
-@ConfigurableService(category = "system", label = "Ephemeris", description_uri = EphemerisManagerImpl.CONFIG_URI)
+@Component(service = EphemerisManagerImpl.class, name = EphemerisManagerImpl.SERVICE_NAME, configurationPid = EphemerisManagerImpl.CONFIG_PID)
 @NonNullByDefault
 public class EphemerisManagerImpl implements EphemerisManager, ConfigOptionProvider {
 
+    public static final String SERVICE_NAME = "ephemeris-service";
+    public static final String CONFIG_PID = "org.openhab.regional";
+
     private final Logger logger = LoggerFactory.getLogger(EphemerisManagerImpl.class);
 
+    private final ConfigurationAdmin configurationAdmin;
+
     // constants for the configuration properties
-    protected static final String CONFIG_URI = "system:ephemeris";
+    protected static final String CONFIG_URI = "system:regional";
     public static final String CONFIG_DAYSET_PREFIX = "dayset-";
     public static final String CONFIG_DAYSET_WEEKEND = "weekend";
     public static final String CONFIG_COUNTRY = "country";
@@ -99,13 +109,21 @@ public class EphemerisManagerImpl implements EphemerisManager, ConfigOptionProvi
     private final LocaleProvider localeProvider;
     private final Bundle bundle;
 
+    private @Nullable Map<String, Object> config;
+    private final ScheduledExecutorService scheduler;
+    private @Nullable ScheduledFuture<?> configSyncTask = null;
+
     private @NonNullByDefault({}) String country;
     private @Nullable String region;
 
     @Activate
-    public EphemerisManagerImpl(final @Reference LocaleProvider localeProvider, final BundleContext bundleContext) {
+    public EphemerisManagerImpl(final @Reference ConfigurationAdmin configurationAdmin,
+            final @Reference LocaleProvider localeProvider, final BundleContext bundleContext,
+            @Nullable Map<String, Object> config) {
+        this.configurationAdmin = configurationAdmin;
         this.localeProvider = localeProvider;
         bundle = bundleContext.getBundle();
+        modified(config);
 
         // Default weekend dayset
         addDayset(CONFIG_DAYSET_WEEKEND, List.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY));
@@ -122,19 +140,33 @@ public class EphemerisManagerImpl implements EphemerisManager, ConfigOptionProvi
             logger.warn("The resource '{}' could not be loaded properly! ConfigDescription options are not available.",
                     JOLLYDAY_COUNTRY_DESCRIPTIONS, e);
         }
+
+        // Changes to the configuration are expected to call the {@link modified} method. This works well when running
+        // in Eclipse. Running in Karaf, the method was not consistently called. Therefore regularly check for changes
+        // in configuration.
+        // This pattern and code was re-used from {@link org.openhab.core.karaf.internal.FeatureInstaller}
+        scheduler = ThreadPoolManager.getScheduledPool(ThreadPoolManager.THREAD_POOL_NAME_COMMON);
+        this.configSyncTask = scheduler.scheduleWithFixedDelay(this::syncConfiguration, 1, 1, TimeUnit.MINUTES);
+    }
+
+    @Deactivate
+    protected void deactivate() {
+        ScheduledFuture<?> task = this.configSyncTask;
+        if (task != null) {
+            task.cancel(true);
+        }
+        this.configSyncTask = null;
     }
 
     private void sortByLabel(List<ParameterOption> parameterOptions) {
         parameterOptions.sort(Comparator.comparing(ParameterOption::getLabel));
     }
 
-    @Activate
-    protected void activate(Map<String, Object> config) {
-        modified(config);
-    }
-
     @Modified
-    protected void modified(Map<String, Object> config) {
+    protected void modified(@Nullable Map<String, Object> config) {
+        if (config == null) {
+            return;
+        }
         config.entrySet().stream().filter(e -> e.getKey().startsWith(CONFIG_DAYSET_PREFIX)).forEach(e -> {
             try {
                 String[] setNameParts = e.getKey().split("-");
@@ -186,6 +218,28 @@ public class EphemerisManagerImpl implements EphemerisManager, ConfigOptionProvi
         configValue = config.get(CONFIG_CITY);
         if (configValue != null) {
             countryParameters.add(configValue.toString());
+        }
+
+        this.config = config;
+    }
+
+    private void syncConfiguration() {
+        try {
+            Dictionary<String, Object> cfg = configurationAdmin.getConfiguration(CONFIG_PID).getProperties();
+            if (cfg == null) {
+                return;
+            }
+            final Map<String, Object> cfgMap = new HashMap<>();
+            final Enumeration<String> enumeration = cfg.keys();
+            while (enumeration.hasMoreElements()) {
+                final String key = enumeration.nextElement();
+                cfgMap.put(key, cfg.get(key));
+            }
+            if (!cfgMap.equals(config)) {
+                modified(cfgMap);
+            }
+        } catch (IOException | IllegalStateException e) {
+            logger.debug("Exception occurred while trying to sync the configuration: {}", e.getMessage());
         }
     }
 

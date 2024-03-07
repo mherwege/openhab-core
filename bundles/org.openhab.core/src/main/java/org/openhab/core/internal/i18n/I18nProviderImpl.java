@@ -115,19 +115,20 @@ import org.slf4j.LoggerFactory;
  * @author Markus Rathgeb - Initial contribution
  * @author Stefan Triller - Initial contribution
  * @author Erdoan Hadzhiyusein - Added time zone
+ * @author Mark Herwege - Common config description for all regional settings
  */
 @Component(immediate = true, configurationPid = I18nProviderImpl.CONFIGURATION_PID, property = {
-        Constants.SERVICE_PID + "=org.openhab.i18n", //
+        Constants.SERVICE_PID + "=org.openhab.regional", //
         "service.config.label=Regional Settings", //
         "service.config.category=system", //
-        "service.config.description.uri=system:i18n" })
+        "service.config.description.uri=system:regional" })
 @NonNullByDefault
 public class I18nProviderImpl
         implements TranslationProvider, LocaleProvider, LocationProvider, TimeZoneProvider, UnitProvider {
 
     private final Logger logger = LoggerFactory.getLogger(I18nProviderImpl.class);
 
-    public static final String CONFIGURATION_PID = "org.openhab.i18n";
+    public static final String CONFIGURATION_PID = "org.openhab.regional";
 
     // LocaleProvider
     public static final String LANGUAGE = "language";

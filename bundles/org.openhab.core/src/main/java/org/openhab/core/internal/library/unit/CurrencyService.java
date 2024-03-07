@@ -14,25 +14,34 @@ package org.openhab.core.internal.library.unit;
 
 import static org.openhab.core.library.unit.CurrencyUnits.BASE_CURRENCY;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import javax.measure.Unit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.core.common.ThreadPoolManager;
 import org.openhab.core.library.dimension.Currency;
 import org.openhab.core.library.unit.CurrencyProvider;
 import org.openhab.core.library.unit.CurrencyUnit;
 import org.openhab.core.library.unit.CurrencyUnits;
-import org.osgi.framework.Constants;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -48,16 +57,17 @@ import tech.units.indriya.format.SimpleUnitFormat;
  *
  * @author Jan N. Klug - Initial contribution
  */
-@Component(service = CurrencyService.class, immediate = true, configurationPid = CurrencyService.CONFIGURATION_PID, property = {
-        Constants.SERVICE_PID + "=org.openhab.units", //
-        "service.config.label=Unit Settings", //
-        "service.config.category=system", //
-        "service.config.description.uri=system:units" })
+@Component(immediate = true, service = CurrencyService.class, name = CurrencyService.SERVICE_NAME, configurationPid = CurrencyService.CONFIG_PID)
 @NonNullByDefault
 public class CurrencyService {
-    public static final String CONFIGURATION_PID = "org.openhab.units";
+    public static final String SERVICE_NAME = "currency-service";
+    public static final String CONFIG_PID = "org.openhab.regional";
+
     public static final String CONFIG_OPTION_CURRENCY_PROVIDER = "currencyProvider";
+
     private final Logger logger = LoggerFactory.getLogger(CurrencyService.class);
+
+    private final ConfigurationAdmin configurationAdmin;
 
     public static Function<Unit<Currency>, @Nullable BigDecimal> FACTOR_FCN = unit -> null;
 
@@ -66,19 +76,61 @@ public class CurrencyService {
     private CurrencyProvider enabledCurrencyProvider = DefaultCurrencyProvider.getInstance();
     private String configuredCurrencyProvider = DefaultCurrencyProvider.getInstance().getName();
 
+    private @Nullable Map<String, Object> config;
+    private final ScheduledExecutorService scheduler;
+    private @Nullable ScheduledFuture<?> configSyncTask = null;
+
     @Activate
-    public CurrencyService(Map<String, Object> config) {
+    public CurrencyService(final @Reference ConfigurationAdmin configurationAdmin,
+            @Nullable Map<String, Object> config) {
+        this.configurationAdmin = configurationAdmin;
         modified(config);
+
+        // Changes to the configuration are expected to call the {@link modified} method. This works well when running
+        // in Eclipse. Running in Karaf, the method was not consistently called. Therefore regularly check for changes
+        // in configuration.
+        // This pattern and code was re-used from {@link org.openhab.core.karaf.internal.FeatureInstaller}
+        scheduler = ThreadPoolManager.getScheduledPool(ThreadPoolManager.THREAD_POOL_NAME_COMMON);
+        this.configSyncTask = scheduler.scheduleWithFixedDelay(this::syncConfiguration, 1, 1, TimeUnit.MINUTES);
+    }
+
+    @Deactivate
+    protected void deactivate() {
+        ScheduledFuture<?> task = this.configSyncTask;
+        if (task != null) {
+            task.cancel(true);
+        }
+        this.configSyncTask = null;
     }
 
     @Modified
-    public void modified(Map<String, Object> config) {
+    public void modified(@Nullable Map<String, Object> config) {
         String configOption = (String) config.get(CONFIG_OPTION_CURRENCY_PROVIDER);
         configuredCurrencyProvider = Objects.requireNonNullElse(configOption,
                 DefaultCurrencyProvider.getInstance().getName());
         CurrencyProvider currencyProvider = currencyProviders.getOrDefault(configuredCurrencyProvider,
                 DefaultCurrencyProvider.getInstance());
         enableProvider(currencyProvider);
+    }
+
+    private void syncConfiguration() {
+        try {
+            Dictionary<String, Object> cfg = configurationAdmin.getConfiguration(CONFIG_PID).getProperties();
+            if (cfg == null) {
+                return;
+            }
+            final Map<String, Object> cfgMap = new HashMap<>();
+            final Enumeration<String> enumeration = cfg.keys();
+            while (enumeration.hasMoreElements()) {
+                final String key = enumeration.nextElement();
+                cfgMap.put(key, cfg.get(key));
+            }
+            if (!cfgMap.equals(config)) {
+                modified(cfgMap);
+            }
+        } catch (IOException | IllegalStateException e) {
+            logger.debug("Exception occurred while trying to sync the configuration: {}", e.getMessage());
+        }
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
