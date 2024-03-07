@@ -33,6 +33,7 @@ import org.osgi.service.component.annotations.Component;
  *
  * @author Simon Kaufmann - Initial contribution
  * @author Erdoan Hadzhiyusein - Added time zone
+ * @author Mark Herwege - Added script options
  */
 @NonNullByDefault
 @Component(immediate = true)
@@ -40,6 +41,7 @@ public class I18nConfigOptionsProvider implements ConfigOptionProvider {
 
     private static final String LANGUAGE = "language";
     private static final String REGION = "region";
+    private static final String SCRIPT = "script";
     private static final String VARIANT = "variant";
     private static final String TIMEZONE = "timezone";
 
@@ -68,6 +70,8 @@ public class I18nConfigOptionsProvider implements ConfigOptionProvider {
                         l -> new ParameterOption(l.getLanguage(), l.getDisplayLanguage(translation)));
             case REGION:
                 return getAvailable(locale, l -> new ParameterOption(l.getCountry(), l.getDisplayCountry(translation)));
+            case SCRIPT:
+                return getAvailable(locale, l -> new ParameterOption(l.getScript(), l.getDisplayScript(translation)));
             case VARIANT:
                 return getAvailable(locale, l -> new ParameterOption(l.getVariant(), l.getDisplayVariant(translation)));
             case TIMEZONE:

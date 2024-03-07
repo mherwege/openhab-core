@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0
+	https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="system:regional">
+	    <parameter-group name="regional">
+	        <label>Regional Settings</label>
+	        <description>Overall regional configuration of the openHAB instance.</description>
+	    </parameter-group>
+        <parameter-group name="ephemeris">
+            <label>Ephemeris Settings</label>
+            <description>Weekday/weekend and holiday configuration.</description>
+        </parameter-group>
+	    <parameter-group name="unit">
+	        <label>Unit Settings</label>
+	        <description>Configuration of units of measurement system.</description>
+	    </parameter-group>
+	
+		<parameter name="language" groupName="regional" type="text">
+			<label>Language</label>
+			<description>The default language that should be used. If not specified, the system default locale is used.</description>
+		</parameter>
+		<parameter name="script" groupName="regional" type="text">
+			<label>Script</label>
+			<description>The script that should be used.</description>
+			<advanced>true</advanced>
+		</parameter>
+		<parameter name="region" groupName="regional" type="text">
+			<label>Country / Region</label>
+			<description>The region that should be used.</description>
+		</parameter>
+		<parameter name="variant" groupName="regional" type="text">
+			<label>Variant</label>
+			<description>A variation of the Locale. Any arbitrary value used to indicate a variation of a Locale.</description>
+			<advanced>true</advanced>
+		</parameter>
+		<parameter name="timezone" groupName="regional" type="text">
+			<label>Time Zone</label>
+			<description>A time zone can be set from the user interface. The underlying system's time zone is the default.</description>
+		</parameter>
+		<parameter name="location" groupName="regional" type="text">
+			<context>location</context>
+			<label>Location</label>
+			<description><![CDATA[The location of this installation.<br>Coordinates as &lt;latitude&gt;,&lt;longitude&gt;[&lt;altitude&gt;]<br>Example: "52.5200066,13.4049540" (Berlin)]]></description>
+		</parameter>
+
+        <parameter name="dayset-weekend" groupName="ephemeris" type="text" required="true" multiple="true">
+            <label>Weekend Days</label>
+            <description>List of usual non workable days.</description>
+            <default>SATURDAY,SUNDAY</default>
+        </parameter>
+        <parameter name="country" groupName="ephemeris" type="text">
+            <label>Country</label>
+            <description>Get the holidays for a specific country (e.g. United States of America = "us"). Default is taken from the country/region setting.</description>
+            <advanced>true</advanced>
+        </parameter>
+        <parameter name="region" groupName="ephemeris" type="text">
+            <label>Region</label>
+            <description>Get the holidays for a specific state (e.g. New York = "ny").</description>
+        </parameter>
+        <parameter name="city" groupName="ephemeris" type="text">
+            <label>City</label>
+            <description>Get the holidays for a specific city (e.g. New York City = "nyc").</description>
+            <advanced>true</advanced>
+        </parameter>
+
+		<parameter name="currencyProvider" groupName="unit" type="text">
+            <label>Currency Provider</label>
+            <description>The service that is used to provide a set of currencies and their exchange rates.</description>
+        </parameter>
+        <parameter name="fixedBaseCurrency" groupName="unit" type="text" pattern="[A-Z]{3}">
+            <label>Fixed Base Currency</label>
+            <description>The base currency of this system when the fixed currency provider is used. Default is used from the country/region setting.</description>
+            <advanced>true</advanced>
+            </parameter>
+        <parameter name="measurementSystem" groupName="unit" type="text">
+            <label>Measurement System</label>
+            <description>The measurement system that is used for unit conversion.</description>
+            <advanced>true</advanced>
+            <options>
+                <option value="SI">Metric</option>
+                <option value="US">Imperial (US)</option>
+            </options>
+        </parameter>
+	</config-description>
+
+</config-description:config-descriptions>

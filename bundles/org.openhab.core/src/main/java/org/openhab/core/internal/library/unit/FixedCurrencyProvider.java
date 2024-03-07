@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Modified;
  *
  * @author Jan N. Klug - Initial contribution
  */
-@Component(service = CurrencyProvider.class, configurationPid = CurrencyService.CONFIGURATION_PID)
+@Component(service = CurrencyProvider.class, configurationPid = CurrencyService.CONFIG_PID)
 @NonNullByDefault
 public class FixedCurrencyProvider implements CurrencyProvider {
     public static final String CONFIG_OPTION_BASE_CURRENCY = "fixedBaseCurrency";
