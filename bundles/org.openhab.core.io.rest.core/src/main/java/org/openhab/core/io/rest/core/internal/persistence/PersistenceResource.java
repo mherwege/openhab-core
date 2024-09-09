@@ -55,21 +55,19 @@ import org.openhab.core.persistence.FilterCriteria;
 import org.openhab.core.persistence.FilterCriteria.Ordering;
 import org.openhab.core.persistence.HistoricItem;
 import org.openhab.core.persistence.ModifiablePersistenceService;
-import org.openhab.core.persistence.PersistenceItemConfiguration;
 import org.openhab.core.persistence.PersistenceItemInfo;
 import org.openhab.core.persistence.PersistenceManager;
 import org.openhab.core.persistence.PersistenceService;
 import org.openhab.core.persistence.PersistenceServiceRegistry;
 import org.openhab.core.persistence.QueryablePersistenceService;
-import org.openhab.core.persistence.config.PersistenceAllConfig;
 import org.openhab.core.persistence.dto.ItemHistoryDTO;
 import org.openhab.core.persistence.dto.PersistenceServiceConfigurationDTO;
 import org.openhab.core.persistence.dto.PersistenceServiceDTO;
+import org.openhab.core.persistence.dto.PersistenceStrategyDTO;
 import org.openhab.core.persistence.registry.ManagedPersistenceServiceConfigurationProvider;
 import org.openhab.core.persistence.registry.PersistenceServiceConfiguration;
 import org.openhab.core.persistence.registry.PersistenceServiceConfigurationDTOMapper;
 import org.openhab.core.persistence.registry.PersistenceServiceConfigurationRegistry;
-import org.openhab.core.persistence.strategy.PersistenceStrategy;
 import org.openhab.core.types.State;
 import org.openhab.core.types.TypeParser;
 import org.openhab.core.types.UnDefType;
@@ -104,6 +102,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * @author Lyubomir Papazov - Change java.util.Date references to be of type java.time.ZonedDateTime
  * @author Markus Rathgeb - Migrated to JAX-RS Whiteboard Specification
  * @author Wouter Born - Migrated to OpenAPI annotations
+ * @author Mark Herwege - Make default strategy to be only a configuration suggestion
  */
 @Component
 @JaxrsResource
@@ -175,28 +174,32 @@ public class PersistenceResource implements RESTResource {
     public Response httpGetPersistenceServiceConfiguration(@Context HttpHeaders headers,
             @Parameter(description = "Id of the persistence service.") @PathParam("serviceId") String serviceId) {
         PersistenceServiceConfiguration configuration = persistenceServiceConfigurationRegistry.get(serviceId);
-        boolean editable = managedPersistenceServiceConfigurationProvider.get(serviceId) != null;
-
-        if (configuration == null) {
-            PersistenceService service = persistenceServiceRegistry.get(serviceId);
-            if (service != null) {
-                List<PersistenceStrategy> strategies = service.getDefaultStrategies();
-                List<PersistenceItemConfiguration> configs = List.of(
-                        new PersistenceItemConfiguration(List.of(new PersistenceAllConfig()), null, strategies, null));
-                configuration = new PersistenceServiceConfiguration(serviceId, configs, strategies, strategies,
-                        List.of());
-                editable = true;
-            }
-        }
 
         if (configuration != null) {
             PersistenceServiceConfigurationDTO configurationDTO = PersistenceServiceConfigurationDTOMapper
                     .map(configuration);
-            configurationDTO.editable = editable;
+            configurationDTO.editable = managedPersistenceServiceConfigurationProvider.get(serviceId) != null;
             return JSONResponse.createResponse(Status.OK, configurationDTO, null);
         } else {
             return Response.status(Status.NOT_FOUND).build();
         }
+    }
+
+    @GET
+    @RolesAllowed({ Role.ADMIN })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Path("{serviceId: [a-zA-Z0-9]+}")
+    @Operation(operationId = "getPersistenceServiceStrategySuggestions", summary = "Gets a persistence service suggested strategies.", security = {
+            @SecurityRequirement(name = "oauth2", scopes = { "admin" }) }, responses = {
+                    @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PersistenceStrategyDTO.class), uniqueItems = true))),
+                    @ApiResponse(responseCode = "404", description = "Suggested strategies not found.") })
+    public Response httpGetPersistenceServiceStrategySuggestions(@Context HttpHeaders headers,
+            @Parameter(description = "Id of the persistence service.") @PathParam("serviceId") String serviceId) {
+        PersistenceService service = persistenceServiceRegistry.get(serviceId);
+        if (service != null) {
+            return JSONResponse.createResponse(Status.OK, service.getDefaultStrategies(), null);
+        }
+        return Response.status(Status.NOT_FOUND).build();
     }
 
     @PUT
