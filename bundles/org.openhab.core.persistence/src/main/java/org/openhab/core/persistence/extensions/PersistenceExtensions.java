@@ -12,6 +12,7 @@
  */
 package org.openhab.core.persistence.extensions;
 
+import java.lang.StackWalker.StackFrame;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.Duration;
@@ -48,6 +49,7 @@ import org.openhab.core.util.Statistics;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -66,6 +68,7 @@ import org.slf4j.LoggerFactory;
  * @author Mark Herwege - lastChange and nextChange methods
  * @author Mark Herwege - handle persisted GroupItem with QuantityType
  * @author Mark Herwege - add median methods
+ * @author Mark Herwege - meaningful warning messages
  */
 @Component(immediate = true)
 @NonNullByDefault
@@ -150,8 +153,7 @@ public class PersistenceExtensions {
             modifiableService.store(item, timestamp, state);
             return;
         }
-        LoggerFactory.getLogger(PersistenceExtensions.class)
-                .warn("There is no modifiable persistence service registered with the id '{}'", effectiveServiceId);
+        warnServiceIncompatible(effectiveServiceId, "modifiable");
     }
 
     /**
@@ -185,8 +187,8 @@ public class PersistenceExtensions {
         if (state != null) {
             internalPersist(item, timestamp, state, serviceId);
         } else {
-            LoggerFactory.getLogger(PersistenceExtensions.class).warn("State '{}' cannot be parsed for item '{}'.",
-                    stateString, item.getName());
+            LoggerFactory.getLogger(PersistenceExtensions.class)
+                    .warn("State '{}' cannot be parsed for item '{}', cannot persist.", stateString, item.getName());
         }
     }
 
@@ -229,8 +231,7 @@ public class PersistenceExtensions {
                     .forEach(s -> modifiableService.store(item, s.timestamp().atZone(timeZone), s.state()));
             return;
         }
-        LoggerFactory.getLogger(PersistenceExtensions.class)
-                .warn("There is no modifiable persistence service registered with the id '{}'", effectiveServiceId);
+        warnServiceIncompatible(effectiveServiceId, "modifiable");
     }
 
     /**
@@ -323,8 +324,16 @@ public class PersistenceExtensions {
                 return result.iterator().next();
             }
         } else {
-            LoggerFactory.getLogger(PersistenceExtensions.class)
-                    .warn("There is no queryable persistence service registered with the id '{}'", effectiveServiceId);
+            Logger logger = LoggerFactory.getLogger(PersistenceExtensions.class);
+            if (logger.isWarnEnabled()) {
+                StackWalker walker = StackWalker.getInstance();
+                String methodName = walker.walk(frames -> frames
+                        .filter(f -> f.getClassName().contains("PersistenceExtensions")).map(StackFrame::getMethodName))
+                        .reduce((first, second) -> second).orElse(null);
+                logger.warn(
+                        "Persistence service with the id '{}' does not support '{}' (not a queryable persistence service)",
+                        effectiveServiceId, methodName);
+            }
         }
         return null;
     }
@@ -500,8 +509,16 @@ public class PersistenceExtensions {
                 }
             }
         } else {
-            LoggerFactory.getLogger(PersistenceExtensions.class)
-                    .warn("There is no queryable persistence service registered with the id '{}'", effectiveServiceId);
+            Logger logger = LoggerFactory.getLogger(PersistenceExtensions.class);
+            if (logger.isWarnEnabled()) {
+                StackWalker walker = StackWalker.getInstance();
+                String methodName = walker.walk(frames -> frames
+                        .filter(f -> f.getClassName().contains("PersistenceExtensions")).map(StackFrame::getMethodName))
+                        .reduce((first, second) -> second).orElse(null);
+                logger.warn(
+                        "Persistence service with the id '{}' does not support '{}' (not a queryable persistence service)",
+                        effectiveServiceId, methodName);
+            }
         }
         return null;
     }
@@ -648,8 +665,7 @@ public class PersistenceExtensions {
                 }
             }
         } else {
-            LoggerFactory.getLogger(PersistenceExtensions.class)
-                    .warn("There is no queryable persistence service registered with the id '{}'", effectiveServiceId);
+            warnServiceIncompatible(effectiveServiceId, "queryable");
         }
         return null;
     }
@@ -2537,8 +2553,7 @@ public class PersistenceExtensions {
 
             return qService.query(filter);
         } else {
-            LoggerFactory.getLogger(PersistenceExtensions.class)
-                    .warn("There is no queryable persistence service registered with the id '{}'", effectiveServiceId);
+            warnServiceIncompatible(effectiveServiceId, "queryable");
         }
         return null;
     }
@@ -2653,8 +2668,7 @@ public class PersistenceExtensions {
 
             mService.remove(filter);
         } else {
-            LoggerFactory.getLogger(PersistenceExtensions.class)
-                    .warn("There is no modifiable persistence service registered with the id '{}'", effectiveServiceId);
+            warnServiceIncompatible(effectiveServiceId, "modifiable");
         }
         return;
     }
@@ -2727,6 +2741,19 @@ public class PersistenceExtensions {
                     .warn("PersistenceServiceRegistryImpl is not available!");
         }
         return null;
+    }
+
+    private static void warnServiceIncompatible(String effectiveServiceId, String serviceType) {
+        Logger logger = LoggerFactory.getLogger(PersistenceExtensions.class);
+        if (logger.isWarnEnabled()) {
+            // Find name of first called method in class, i.e. entrypoint for action being executed
+            StackWalker walker = StackWalker.getInstance();
+            String methodName = walker.walk(frames -> frames
+                    .filter(f -> f.getClassName().contains("PersistenceExtensions")).map(StackFrame::getMethodName))
+                    .reduce((first, second) -> second).orElse(null);
+            logger.warn("Persistence service with id '{}' does not support '{}' action (not a {} persistence service)",
+                    effectiveServiceId, methodName, serviceType);
+        }
     }
 
     private static @Nullable DecimalType getItemValue(Item item) {
