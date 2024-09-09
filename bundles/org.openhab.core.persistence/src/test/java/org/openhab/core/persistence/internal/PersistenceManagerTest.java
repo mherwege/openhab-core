@@ -490,7 +490,7 @@ public class PersistenceManagerTest {
                 : List.of(strategy);
 
         PersistenceServiceConfiguration serviceConfiguration = new PersistenceServiceConfiguration(serviceId,
-                List.of(itemConfiguration), List.of(), strategies, filters);
+                List.of(itemConfiguration), strategies, filters);
         manager.added(serviceConfiguration);
 
         return serviceConfiguration;

@@ -25,21 +25,19 @@ import org.openhab.core.persistence.strategy.PersistenceStrategy;
  * The {@link PersistenceServiceConfiguration} represents the configuration for a persistence service.
  *
  * @author Jan N. Klug - Initial contribution
+ * @author Mark Herwege - Make default strategy to be only a configuration suggestion
  */
 @NonNullByDefault
 public class PersistenceServiceConfiguration implements Identifiable<String> {
     private final String serviceId;
     private final List<PersistenceItemConfiguration> configs;
-    private final List<PersistenceStrategy> defaults;
     private final List<PersistenceStrategy> strategies;
     private final List<PersistenceFilter> filters;
 
     public PersistenceServiceConfiguration(String serviceId, Collection<PersistenceItemConfiguration> configs,
-            Collection<PersistenceStrategy> defaults, Collection<PersistenceStrategy> strategies,
-            Collection<PersistenceFilter> filters) {
+            Collection<PersistenceStrategy> strategies, Collection<PersistenceFilter> filters) {
         this.serviceId = serviceId;
         this.configs = List.copyOf(configs);
-        this.defaults = List.copyOf(defaults);
         this.strategies = List.copyOf(strategies);
         this.filters = List.copyOf(filters);
     }
@@ -56,15 +54,6 @@ public class PersistenceServiceConfiguration implements Identifiable<String> {
      */
     public List<PersistenceItemConfiguration> getConfigs() {
         return configs;
-    }
-
-    /**
-     * Get the default strategies.
-     *
-     * @return an unmodifiable list of the default strategies
-     */
-    public List<PersistenceStrategy> getDefaults() {
-        return defaults;
     }
 
     /**
