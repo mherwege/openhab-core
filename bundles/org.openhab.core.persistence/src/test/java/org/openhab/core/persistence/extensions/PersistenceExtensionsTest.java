@@ -2368,46 +2368,46 @@ public class PersistenceExtensionsTest {
     }
 
     @Test
-    public void testLastUpdate() {
-        ZonedDateTime lastUpdate = PersistenceExtensions.lastUpdate(numberItem, SERVICE_ID);
+    public void testLastPersistedUpdate() {
+        ZonedDateTime lastUpdate = PersistenceExtensions.lastPersistedUpdate(numberItem, SERVICE_ID);
         assertNotNull(lastUpdate);
         assertEquals(ZonedDateTime.of(HISTORIC_END, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()), lastUpdate);
 
         // default persistence service
-        lastUpdate = PersistenceExtensions.lastUpdate(numberItem);
+        lastUpdate = PersistenceExtensions.lastPersistedUpdate(numberItem);
         assertNull(lastUpdate);
     }
 
     @Test
-    public void testNextUpdate() {
-        ZonedDateTime nextUpdate = PersistenceExtensions.nextUpdate(numberItem, SERVICE_ID);
+    public void testNextPersistedUpdate() {
+        ZonedDateTime nextUpdate = PersistenceExtensions.nextPersistedUpdate(numberItem, SERVICE_ID);
         assertNotNull(nextUpdate);
         assertEquals(ZonedDateTime.of(FUTURE_START, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()), nextUpdate);
 
         // default persistence service
-        nextUpdate = PersistenceExtensions.lastUpdate(numberItem);
+        nextUpdate = PersistenceExtensions.lastPersistedUpdate(numberItem);
         assertNull(nextUpdate);
     }
 
     @Test
-    public void testLastChange() {
-        ZonedDateTime lastChange = PersistenceExtensions.lastChange(numberItem, SERVICE_ID);
+    public void testLastPersistedChange() {
+        ZonedDateTime lastChange = PersistenceExtensions.lastPersistedChange(numberItem, SERVICE_ID);
         assertNotNull(lastChange);
         assertEquals(ZonedDateTime.of(HISTORIC_END, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()), lastChange);
 
         // default persistence service
-        lastChange = PersistenceExtensions.lastChange(numberItem);
+        lastChange = PersistenceExtensions.lastPersistedChange(numberItem);
         assertNull(lastChange);
     }
 
     @Test
-    public void testNextChange() {
-        ZonedDateTime nextChange = PersistenceExtensions.nextChange(numberItem, SERVICE_ID);
+    public void testNextPersistedChange() {
+        ZonedDateTime nextChange = PersistenceExtensions.nextPersistedChange(numberItem, SERVICE_ID);
         assertNotNull(nextChange);
         assertEquals(ZonedDateTime.of(FUTURE_START, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()), nextChange);
 
         // default persistence service
-        nextChange = PersistenceExtensions.nextChange(numberItem);
+        nextChange = PersistenceExtensions.nextPersistedChange(numberItem);
         assertNull(nextChange);
     }
 
@@ -2692,237 +2692,239 @@ public class PersistenceExtensionsTest {
     }
 
     @Test
-    public void testPreviousStateDecimalTypeNoSkip() {
-        HistoricItem prevStateItem = PersistenceExtensions.previousState(numberItem, false, SERVICE_ID);
+    public void testPreviousPersistedStateDecimalTypeNoSkip() {
+        HistoricItem prevStateItem = PersistenceExtensions.previousPersistedState(numberItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertThat(prevStateItem.getState(), is(instanceOf(DecimalType.class)));
         assertEquals(value(HISTORIC_END), prevStateItem.getState());
 
         numberItem.setState(new DecimalType(4321));
-        prevStateItem = PersistenceExtensions.previousState(numberItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(numberItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(value(HISTORIC_END), prevStateItem.getState());
 
         numberItem.setState(new DecimalType(HISTORIC_END));
-        prevStateItem = PersistenceExtensions.previousState(numberItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(numberItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(value(HISTORIC_END), prevStateItem.getState());
 
         numberItem.setState(new DecimalType(3025));
-        prevStateItem = PersistenceExtensions.previousState(numberItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(numberItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(value(HISTORIC_END), prevStateItem.getState());
 
         // default persistence service
-        prevStateItem = PersistenceExtensions.previousState(numberItem, false);
+        prevStateItem = PersistenceExtensions.previousPersistedState(numberItem, false);
         assertNull(prevStateItem);
     }
 
     @Test
-    public void testPreviousStateQuantityTypeNoSkip() {
-        HistoricItem prevStateItem = PersistenceExtensions.previousState(quantityItem, false, SERVICE_ID);
+    public void testPreviousPersistedStateQuantityTypeNoSkip() {
+        HistoricItem prevStateItem = PersistenceExtensions.previousPersistedState(quantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertThat(prevStateItem.getState(), is(instanceOf(QuantityType.class)));
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         quantityItem.setState(QuantityType.valueOf(4321, SIUnits.CELSIUS));
-        prevStateItem = PersistenceExtensions.previousState(quantityItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(quantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         quantityItem.setState(QuantityType.valueOf(HISTORIC_END, SIUnits.CELSIUS));
-        prevStateItem = PersistenceExtensions.previousState(quantityItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(quantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         quantityItem.setState(QuantityType.valueOf(3025, SIUnits.CELSIUS));
-        prevStateItem = PersistenceExtensions.previousState(quantityItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(quantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         // default persistence service
-        prevStateItem = PersistenceExtensions.previousState(quantityItem, false);
+        prevStateItem = PersistenceExtensions.previousPersistedState(quantityItem, false);
         assertNull(prevStateItem);
     }
 
     @Test
-    public void testPreviousStateGroupQuantityTypeNoSkip() {
-        HistoricItem prevStateItem = PersistenceExtensions.previousState(groupQuantityItem, false, SERVICE_ID);
+    public void testPreviousPersistedStateGroupQuantityTypeNoSkip() {
+        HistoricItem prevStateItem = PersistenceExtensions.previousPersistedState(groupQuantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertThat(prevStateItem.getState(), is(instanceOf(QuantityType.class)));
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         groupQuantityItem.setState(QuantityType.valueOf(4321, SIUnits.CELSIUS));
-        prevStateItem = PersistenceExtensions.previousState(groupQuantityItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(groupQuantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         groupQuantityItem.setState(QuantityType.valueOf(HISTORIC_END, SIUnits.CELSIUS));
-        prevStateItem = PersistenceExtensions.previousState(groupQuantityItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(groupQuantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         groupQuantityItem.setState(QuantityType.valueOf(3025, SIUnits.CELSIUS));
-        prevStateItem = PersistenceExtensions.previousState(groupQuantityItem, false, SERVICE_ID);
+        prevStateItem = PersistenceExtensions.previousPersistedState(groupQuantityItem, false, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END), SIUnits.CELSIUS), prevStateItem.getState());
 
         // default persistence service
-        prevStateItem = PersistenceExtensions.previousState(groupQuantityItem, false);
+        prevStateItem = PersistenceExtensions.previousPersistedState(groupQuantityItem, false);
         assertNull(prevStateItem);
     }
 
     @Test
-    public void testPreviousStateDecimalTypeSkip() {
+    public void testPreviousPersistedStateDecimalTypeSkip() {
         numberItem.setState(new DecimalType(HISTORIC_END));
-        HistoricItem prevStateItem = PersistenceExtensions.previousState(numberItem, true, SERVICE_ID);
+        HistoricItem prevStateItem = PersistenceExtensions.previousPersistedState(numberItem, true, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(value(HISTORIC_END - 1), prevStateItem.getState());
 
         // default persistence service
-        prevStateItem = PersistenceExtensions.previousState(numberItem, true);
+        prevStateItem = PersistenceExtensions.previousPersistedState(numberItem, true);
         assertNull(prevStateItem);
     }
 
     @Test
-    public void testPreviousStateQuantityTypeSkip() {
+    public void testPreviousPersistedStateQuantityTypeSkip() {
         quantityItem.setState(QuantityType.valueOf(HISTORIC_END, SIUnits.CELSIUS));
-        HistoricItem prevStateItem = PersistenceExtensions.previousState(quantityItem, true, SERVICE_ID);
+        HistoricItem prevStateItem = PersistenceExtensions.previousPersistedState(quantityItem, true, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END - 1), SIUnits.CELSIUS), prevStateItem.getState());
 
         // default persistence service
-        prevStateItem = PersistenceExtensions.previousState(quantityItem, true);
+        prevStateItem = PersistenceExtensions.previousPersistedState(quantityItem, true);
         assertNull(prevStateItem);
     }
 
     @Test
-    public void testPreviousStateGroupQuantityTypeSkip() {
+    public void testPreviousPersistedStateGroupQuantityTypeSkip() {
         groupQuantityItem.setState(QuantityType.valueOf(HISTORIC_END, SIUnits.CELSIUS));
-        HistoricItem prevStateItem = PersistenceExtensions.previousState(groupQuantityItem, true, SERVICE_ID);
+        HistoricItem prevStateItem = PersistenceExtensions.previousPersistedState(groupQuantityItem, true, SERVICE_ID);
         assertNotNull(prevStateItem);
         assertEquals(new QuantityType<>(value(HISTORIC_END - 1), SIUnits.CELSIUS), prevStateItem.getState());
 
         // default persistence service
-        prevStateItem = PersistenceExtensions.previousState(groupQuantityItem, true);
+        prevStateItem = PersistenceExtensions.previousPersistedState(groupQuantityItem, true);
         assertNull(prevStateItem);
     }
 
     @Test
-    public void testNextStateDecimalTypeNoSkip() {
-        HistoricItem nextStateItem = PersistenceExtensions.nextState(numberItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertThat(nextStateItem.getState(), is(instanceOf(DecimalType.class)));
-        assertEquals(value(FUTURE_START), nextStateItem.getState());
+    public void testNextPersistedStateDecimalTypeNoSkip() {
+        HistoricItem nextPersistedStateItem = PersistenceExtensions.nextPersistedState(numberItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertThat(nextPersistedStateItem.getState(), is(instanceOf(DecimalType.class)));
+        assertEquals(value(FUTURE_START), nextPersistedStateItem.getState());
 
         numberItem.setState(new DecimalType(4321));
-        nextStateItem = PersistenceExtensions.nextState(numberItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(value(FUTURE_START), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(numberItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(value(FUTURE_START), nextPersistedStateItem.getState());
 
         numberItem.setState(new DecimalType(FUTURE_START));
-        nextStateItem = PersistenceExtensions.nextState(numberItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(value(FUTURE_START), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(numberItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(value(FUTURE_START), nextPersistedStateItem.getState());
 
         numberItem.setState(new DecimalType(3025));
-        nextStateItem = PersistenceExtensions.nextState(numberItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(value(FUTURE_START), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(numberItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(value(FUTURE_START), nextPersistedStateItem.getState());
 
         // default persistence service
-        nextStateItem = PersistenceExtensions.nextState(numberItem, false);
-        assertNull(nextStateItem);
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(numberItem, false);
+        assertNull(nextPersistedStateItem);
     }
 
     @Test
-    public void testNextStateQuantityTypeNoSkip() {
-        HistoricItem nextStateItem = PersistenceExtensions.nextState(quantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertThat(nextStateItem.getState(), is(instanceOf(QuantityType.class)));
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+    public void testNextPersistedStateQuantityTypeNoSkip() {
+        HistoricItem nextPersistedStateItem = PersistenceExtensions.nextPersistedState(quantityItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertThat(nextPersistedStateItem.getState(), is(instanceOf(QuantityType.class)));
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         quantityItem.setState(QuantityType.valueOf(4321, SIUnits.CELSIUS));
-        nextStateItem = PersistenceExtensions.nextState(quantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(quantityItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         quantityItem.setState(QuantityType.valueOf(FUTURE_START, SIUnits.CELSIUS));
-        nextStateItem = PersistenceExtensions.nextState(quantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(quantityItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         quantityItem.setState(QuantityType.valueOf(3025, SIUnits.CELSIUS));
-        nextStateItem = PersistenceExtensions.nextState(quantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(quantityItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         // default persistence service
-        nextStateItem = PersistenceExtensions.nextState(quantityItem, false);
-        assertNull(nextStateItem);
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(quantityItem, false);
+        assertNull(nextPersistedStateItem);
     }
 
     @Test
-    public void testNextStateGroupQuantityTypeNoSkip() {
-        HistoricItem nextStateItem = PersistenceExtensions.nextState(groupQuantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertThat(nextStateItem.getState(), is(instanceOf(QuantityType.class)));
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+    public void testNextPersistedStateGroupQuantityTypeNoSkip() {
+        HistoricItem nextPersistedStateItem = PersistenceExtensions.nextPersistedState(groupQuantityItem, false,
+                SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertThat(nextPersistedStateItem.getState(), is(instanceOf(QuantityType.class)));
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         groupQuantityItem.setState(QuantityType.valueOf(4321, SIUnits.CELSIUS));
-        nextStateItem = PersistenceExtensions.nextState(groupQuantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(groupQuantityItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         groupQuantityItem.setState(QuantityType.valueOf(FUTURE_START, SIUnits.CELSIUS));
-        nextStateItem = PersistenceExtensions.nextState(groupQuantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(groupQuantityItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         groupQuantityItem.setState(QuantityType.valueOf(3025, SIUnits.CELSIUS));
-        nextStateItem = PersistenceExtensions.nextState(groupQuantityItem, false, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextStateItem.getState());
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(groupQuantityItem, false, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         // default persistence service
-        nextStateItem = PersistenceExtensions.nextState(groupQuantityItem, false);
-        assertNull(nextStateItem);
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(groupQuantityItem, false);
+        assertNull(nextPersistedStateItem);
     }
 
     @Test
-    public void testNextStateDecimalTypeSkip() {
+    public void testNextPersistedStateDecimalTypeSkip() {
         numberItem.setState(new DecimalType(FUTURE_START));
-        HistoricItem nextStateItem = PersistenceExtensions.nextState(numberItem, true, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(value(FUTURE_START + 1), nextStateItem.getState());
+        HistoricItem nextPersistedStateItem = PersistenceExtensions.nextPersistedState(numberItem, true, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(value(FUTURE_START + 1), nextPersistedStateItem.getState());
 
         // default persistence service
-        nextStateItem = PersistenceExtensions.nextState(numberItem, true);
-        assertNull(nextStateItem);
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(numberItem, true);
+        assertNull(nextPersistedStateItem);
     }
 
     @Test
-    public void testNextStateQuantityTypeSkip() {
+    public void testNextPersistedStateQuantityTypeSkip() {
         quantityItem.setState(QuantityType.valueOf(FUTURE_START, SIUnits.CELSIUS));
-        HistoricItem nextStateItem = PersistenceExtensions.nextState(quantityItem, true, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START + 1), SIUnits.CELSIUS), nextStateItem.getState());
+        HistoricItem nextPersistedStateItem = PersistenceExtensions.nextPersistedState(quantityItem, true, SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START + 1), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         // default persistence service
-        nextStateItem = PersistenceExtensions.nextState(quantityItem, true);
-        assertNull(nextStateItem);
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(quantityItem, true);
+        assertNull(nextPersistedStateItem);
     }
 
     @Test
-    public void testNextStateGroupQuantityTypeSkip() {
+    public void testNextPersistedStateGroupQuantityTypeSkip() {
         groupQuantityItem.setState(QuantityType.valueOf(FUTURE_START, SIUnits.CELSIUS));
-        HistoricItem nextStateItem = PersistenceExtensions.nextState(groupQuantityItem, true, SERVICE_ID);
-        assertNotNull(nextStateItem);
-        assertEquals(new QuantityType<>(value(FUTURE_START + 1), SIUnits.CELSIUS), nextStateItem.getState());
+        HistoricItem nextPersistedStateItem = PersistenceExtensions.nextPersistedState(groupQuantityItem, true,
+                SERVICE_ID);
+        assertNotNull(nextPersistedStateItem);
+        assertEquals(new QuantityType<>(value(FUTURE_START + 1), SIUnits.CELSIUS), nextPersistedStateItem.getState());
 
         // default persistence service
-        nextStateItem = PersistenceExtensions.nextState(groupQuantityItem, true);
-        assertNull(nextStateItem);
+        nextPersistedStateItem = PersistenceExtensions.nextPersistedState(groupQuantityItem, true);
+        assertNull(nextPersistedStateItem);
     }
 
     @Test
@@ -3198,7 +3200,7 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countSince(numberItem, now.minusHours(historicHours),
                 TestCachedValuesPersistenceService.ID), is(5L));
-        HistoricItem historicItem = PersistenceExtensions.previousState(numberItem,
+        HistoricItem historicItem = PersistenceExtensions.previousPersistedState(numberItem,
                 TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
@@ -3209,7 +3211,7 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countSince(numberItem, now.minusHours(historicHours),
                 TestCachedValuesPersistenceService.ID), is(4L));
-        historicItem = PersistenceExtensions.previousState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.previousPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(50)));
 
@@ -3219,7 +3221,7 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countSince(numberItem, now.minusHours(historicHours),
                 TestCachedValuesPersistenceService.ID), is(3L));
-        historicItem = PersistenceExtensions.previousState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.previousPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
 
@@ -3229,7 +3231,7 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countSince(numberItem, now.minusHours(historicHours),
                 TestCachedValuesPersistenceService.ID), is(0L));
-        historicItem = PersistenceExtensions.previousState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.previousPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNull(historicItem);
     }
 
@@ -3244,7 +3246,8 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countUntil(numberItem, now.plusHours(futureHours),
                 TestCachedValuesPersistenceService.ID), is(5L));
-        HistoricItem historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        HistoricItem historicItem = PersistenceExtensions.nextPersistedState(numberItem,
+                TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
 
@@ -3253,7 +3256,7 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countUntil(numberItem, now.plusHours(futureHours),
                 TestCachedValuesPersistenceService.ID), is(4L));
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(50)));
 
@@ -3262,7 +3265,7 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countUntil(numberItem, now.plusHours(futureHours),
                 TestCachedValuesPersistenceService.ID), is(3L));
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
 
@@ -3272,7 +3275,7 @@ public class PersistenceExtensionsTest {
                 TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countUntil(numberItem, now.plusHours(futureHours),
                 TestCachedValuesPersistenceService.ID), is(0L));
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNull(historicItem);
     }
 
@@ -3287,11 +3290,11 @@ public class PersistenceExtensionsTest {
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countBetween(numberItem, now.minusHours(historicHours),
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID), is(10L));
-        HistoricItem historicItem = PersistenceExtensions.previousState(numberItem,
+        HistoricItem historicItem = PersistenceExtensions.previousPersistedState(numberItem,
                 TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
 
@@ -3301,10 +3304,10 @@ public class PersistenceExtensionsTest {
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countBetween(numberItem, now.minusHours(historicHours),
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID), is(8L));
-        historicItem = PersistenceExtensions.previousState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.previousPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
 
@@ -3314,10 +3317,10 @@ public class PersistenceExtensionsTest {
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countBetween(numberItem, now.minusHours(historicHours),
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID), is(6L));
-        historicItem = PersistenceExtensions.previousState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.previousPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
 
@@ -3327,10 +3330,10 @@ public class PersistenceExtensionsTest {
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countBetween(numberItem, now.minusHours(historicHours),
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID), is(3L));
-        historicItem = PersistenceExtensions.previousState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.previousPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(100)));
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNotNull(historicItem);
         assertThat(historicItem.getState(), is(new DecimalType(0)));
 
@@ -3340,9 +3343,9 @@ public class PersistenceExtensionsTest {
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID));
         assertThat(PersistenceExtensions.countBetween(numberItem, now.minusHours(historicHours),
                 now.plusHours(futureHours), TestCachedValuesPersistenceService.ID), is(0L));
-        historicItem = PersistenceExtensions.previousState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.previousPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNull(historicItem);
-        historicItem = PersistenceExtensions.nextState(numberItem, TestCachedValuesPersistenceService.ID);
+        historicItem = PersistenceExtensions.nextPersistedState(numberItem, TestCachedValuesPersistenceService.ID);
         assertNull(historicItem);
     }
 

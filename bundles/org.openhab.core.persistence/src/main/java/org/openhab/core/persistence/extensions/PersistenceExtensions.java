@@ -330,19 +330,20 @@ public class PersistenceExtensions {
     }
 
     /**
-     * Query the last historic update time of a given <code>item</code>. The default persistence service is used.
+     * Query the last persisted historic update time of a given <code>item</code>. The default persistence service is
+     * used.
      *
      * @param item the item for which the last historic update time is to be returned
      * @return point in time of the last historic update to <code>item</code>, <code>null</code> if there are no
      *         historic persisted updates, the state has changed since the last update or the default persistence
      *         service is not available or not a {@link QueryablePersistenceService}
      */
-    public static @Nullable ZonedDateTime lastUpdate(Item item) {
+    public static @Nullable ZonedDateTime lastPersistedUpdate(Item item) {
         return internalAdjacentUpdate(item, false, null);
     }
 
     /**
-     * Query for the last historic update time of a given <code>item</code>.
+     * Query for the last persisted historic update time of a given <code>item</code>.
      *
      * @param item the item for which the last historic update time is to be returned
      * @param serviceId the name of the {@link PersistenceService} to use
@@ -350,7 +351,7 @@ public class PersistenceExtensions {
      *         historic persisted updates, the state has changed since the last update or if persistence service given
      *         by <code>serviceId</code> does not refer to an available {@link QueryablePersistenceService}
      */
-    public static @Nullable ZonedDateTime lastUpdate(Item item, @Nullable String serviceId) {
+    public static @Nullable ZonedDateTime lastPersistedUpdate(Item item, @Nullable String serviceId) {
         return internalAdjacentUpdate(item, false, serviceId);
     }
 
@@ -362,6 +363,7 @@ public class PersistenceExtensions {
      *         future persisted updates or the default persistence service is not available or not a
      *         {@link QueryablePersistenceService}
      */
+    @Deprecated
     public static @Nullable ZonedDateTime nextUpdate(Item item) {
         return internalAdjacentUpdate(item, true, null);
     }
@@ -375,7 +377,38 @@ public class PersistenceExtensions {
      *         future persisted updates or if persistence service given by <code>serviceId</code> does not refer to an
      *         available {@link QueryablePersistenceService}
      */
+    @Deprecated
     public static @Nullable ZonedDateTime nextUpdate(Item item, @Nullable String serviceId) {
+        return internalAdjacentUpdate(item, true, serviceId);
+    }
+
+    /**
+     * Query the first future persisted update time of a given <code>item</code>. The default persistence service is
+     * used.
+     *
+     * This method has been deprecated and {@link #nextPersistedUpdate(Item)} should be used instead.
+     *
+     * @param item the item for which the first future update time is to be returned
+     * @return point in time of the first future update to <code>item</code>, or <code>null</code> if there are no
+     *         future persisted updates or the default persistence service is not available or not a
+     *         {@link QueryablePersistenceService}
+     */
+    public static @Nullable ZonedDateTime nextPersistedUpdate(Item item) {
+        return internalAdjacentUpdate(item, true, null);
+    }
+
+    /**
+     * Query for the first future persisted update time of a given <code>item</code>.
+     *
+     * This method has been deprecated and {@link #nextPersistedUpdate(Item, String)} should be used instead.
+     *
+     * @param item the item for which the first future update time is to be returned
+     * @param serviceId the name of the {@link PersistenceService} to use
+     * @return point in time of the first future update to <code>item</code>, or <code>null</code> if there are no
+     *         future persisted updates or if persistence service given by <code>serviceId</code> does not refer to an
+     *         available {@link QueryablePersistenceService}
+     */
+    public static @Nullable ZonedDateTime nextPersistedUpdate(Item item, @Nullable String serviceId) {
         return internalAdjacentUpdate(item, true, serviceId);
     }
 
@@ -385,19 +418,20 @@ public class PersistenceExtensions {
     }
 
     /**
-     * Query the last historic change time of a given <code>item</code>. The default persistence service is used.
+     * Query the last persisted historic change time of a given <code>item</code>. The default persistence service is
+     * used.
      *
      * @param item the item for which the last historic change time is to be returned
      * @return point in time of the last historic change to <code>item</code>, <code>null</code> if there are no
      *         historic persisted changes, the state has changed since the last update or the default persistence
      *         service is not available or not a {@link QueryablePersistenceService}
      */
-    public static @Nullable ZonedDateTime lastChange(Item item) {
+    public static @Nullable ZonedDateTime lastPersistedChange(Item item) {
         return internalAdjacentChange(item, false, null);
     }
 
     /**
-     * Query for the last historic change time of a given <code>item</code>.
+     * Query for the last persisted historic change time of a given <code>item</code>.
      *
      * @param item the item for which the last historic change time is to be returned
      * @param serviceId the name of the {@link PersistenceService} to use
@@ -405,24 +439,32 @@ public class PersistenceExtensions {
      *         historic persisted changes, the state has changed since the last update or if persistence service given
      *         by <code>serviceId</code> does not refer to an available {@link QueryablePersistenceService}
      */
-    public static @Nullable ZonedDateTime lastChange(Item item, @Nullable String serviceId) {
+    public static @Nullable ZonedDateTime lastPersistedChange(Item item, @Nullable String serviceId) {
         return internalAdjacentChange(item, false, serviceId);
     }
 
     /**
-     * Query the first future change time of a given <code>item</code>. The default persistence service is used.
+     * Query the first future persisted change time of a given <code>item</code>. The default persistence service is
+     * used.
+     *
+     * This method has been deprecated and {@link #nextPersistedChange(Item)} should be used instead.
      *
      * @param item the item for which the first future change time is to be returned
      * @return point in time of the first future change to <code>item</code>, or <code>null</code> if there are no
      *         future persisted changes or the default persistence service is not available or not a
      *         {@link QueryablePersistenceService}
      */
+    @Deprecated
     public static @Nullable ZonedDateTime nextChange(Item item) {
+        LoggerFactory.getLogger(PersistenceExtensions.class).info(
+                "The nextChange method has been deprecated and will be removed in a future version, use nextPersistedChange instead.");
         return internalAdjacentChange(item, true, null);
     }
 
     /**
-     * Query for the first future change time of a given <code>item</code>.
+     * Query for the first future persisted change time of a given <code>item</code>.
+     *
+     * This method has been deprecated and {@link #nextPersistedChange(Item, String)} should be used instead.
      *
      * @param item the item for which the first future change time is to be returned
      * @param serviceId the name of the {@link PersistenceService} to use
@@ -430,7 +472,36 @@ public class PersistenceExtensions {
      *         future persisted changes or if persistence service given by <code>serviceId</code> does not refer to an
      *         available {@link QueryablePersistenceService}
      */
+    @Deprecated
     public static @Nullable ZonedDateTime nextChange(Item item, @Nullable String serviceId) {
+        LoggerFactory.getLogger(PersistenceExtensions.class).info(
+                "The nextChange method has been deprecated and will be removed in a future version, use nextPersistedChange instead.");
+        return internalAdjacentChange(item, true, serviceId);
+    }
+
+    /**
+     * Query the first future persisted change time of a given <code>item</code>. The default persistence service is
+     * used.
+     *
+     * @param item the item for which the first future change time is to be returned
+     * @return point in time of the first future change to <code>item</code>, or <code>null</code> if there are no
+     *         future persisted changes or the default persistence service is not available or not a
+     *         {@link QueryablePersistenceService}
+     */
+    public static @Nullable ZonedDateTime nextPersistedChange(Item item) {
+        return internalAdjacentChange(item, true, null);
+    }
+
+    /**
+     * Query for the first future persisted change time of a given <code>item</code>.
+     *
+     * @param item the item for which the first future change time is to be returned
+     * @param serviceId the name of the {@link PersistenceService} to use
+     * @return point in time of the first future change to <code>item</code>, or <code>null</code> if there are no
+     *         future persisted changes or if persistence service given by <code>serviceId</code> does not refer to an
+     *         available {@link QueryablePersistenceService}
+     */
+    public static @Nullable ZonedDateTime nextPersistedChange(Item item, @Nullable String serviceId) {
         return internalAdjacentChange(item, true, serviceId);
     }
 
@@ -461,26 +532,21 @@ public class PersistenceExtensions {
             filter.setPageNumber(startPage);
 
             Iterable<HistoricItem> items = qService.query(filter);
-            Iterator<HistoricItem> itemIterator = items.iterator();
-            State state = item.getState();
-            if (itemIterator.hasNext()) {
-                if (!skipEqual) {
-                    HistoricItem historicItem = itemIterator.next();
-                    if (!forward && !historicItem.getState().equals(state)) {
-                        // Last persisted state value different from current state value, so it must have updated since
-                        // last persist. We do not know when.
-                        return null;
-                    }
-                    return historicItem.getTimestamp();
-                } else {
-                    HistoricItem historicItem = itemIterator.next();
-                    int itemCount = 1;
-                    if (!historicItem.getState().equals(state)) {
-                        // Persisted state value different from current state value, so it must have changed, but we do
-                        // not know when when looking backward.
-                        return forward ? historicItem.getTimestamp() : null;
-                    }
-                    while (items != null) {
+            while (items != null) {
+                Iterator<HistoricItem> itemIterator = items.iterator();
+                int itemCount = 0;
+                State state = item.getState();
+                if (itemIterator.hasNext()) {
+                    if (!skipEqual) {
+                        HistoricItem historicItem = itemIterator.next();
+                        return historicItem.getTimestamp();
+                    } else {
+                        HistoricItem historicItem = itemIterator.next();
+                        if (!historicItem.getState().equals(state)) {
+                            // Persisted state value different from current state value, so it must have changed, but we
+                            // do not know when looking backward.
+                            return forward ? historicItem.getTimestamp() : null;
+                        }
                         while (historicItem.getState().equals(state) && itemIterator.hasNext()) {
                             HistoricItem nextHistoricItem = itemIterator.next();
                             itemCount++;
@@ -492,7 +558,6 @@ public class PersistenceExtensions {
                         if (itemCount == filter.getPageSize()) {
                             filter.setPageNumber(++startPage);
                             items = qService.query(filter);
-                            itemCount = 0;
                         } else {
                             items = null;
                         }
@@ -507,30 +572,30 @@ public class PersistenceExtensions {
     }
 
     /**
-     * Returns the previous state of a given <code>item</code>.
+     * Returns the previous persisted state of a given <code>item</code>.
      *
      * @param item the item to get the previous state value for
      * @return the previous state or <code>null</code> if no previous state could be found, or if the default
      *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
      */
-    public static @Nullable HistoricItem previousState(Item item) {
+    public static @Nullable HistoricItem previousPersistedState(Item item) {
         return internalAdjacentState(item, false, false, null);
     }
 
     /**
-     * Returns the previous state of a given <code>item</code>.
+     * Returns the previous persisted state of a given <code>item</code>.
      *
      * @param item the item to get the previous state value for
      * @param skipEqual if true, skips equal state values and searches the first state not equal the current state
      * @return the previous state or <code>null</code> if no previous state could be found, or if the default
      *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
      */
-    public static @Nullable HistoricItem previousState(Item item, boolean skipEqual) {
+    public static @Nullable HistoricItem previousPersistedState(Item item, boolean skipEqual) {
         return internalAdjacentState(item, skipEqual, false, null);
     }
 
     /**
-     * Returns the previous state of a given <code>item</code>.
+     * Returns the previous persisted state of a given <code>item</code>.
      * The {@link PersistenceService} identified by the <code>serviceId</code> is used.
      *
      * @param item the item to get the previous state value for
@@ -538,12 +603,12 @@ public class PersistenceExtensions {
      * @return the previous state or <code>null</code> if no previous state could be found, or if the default
      *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
      */
-    public static @Nullable HistoricItem previousState(Item item, @Nullable String serviceId) {
+    public static @Nullable HistoricItem previousPersistedState(Item item, @Nullable String serviceId) {
         return internalAdjacentState(item, false, false, serviceId);
     }
 
     /**
-     * Returns the previous state of a given <code>item</code>.
+     * Returns the previous persisted state of a given <code>item</code>.
      * The {@link PersistenceService} identified by the <code>serviceId</code> is used.
      *
      * @param item the item to get the previous state value for
@@ -553,35 +618,107 @@ public class PersistenceExtensions {
      * @return the previous state or <code>null</code> if no previous state could be found, or if the given
      *         <code>serviceId</code> is not available or does not refer to a {@link QueryablePersistenceService}
      */
-    public static @Nullable HistoricItem previousState(Item item, boolean skipEqual, @Nullable String serviceId) {
+    public static @Nullable HistoricItem previousPersistedState(Item item, boolean skipEqual,
+            @Nullable String serviceId) {
         return internalAdjacentState(item, skipEqual, false, serviceId);
     }
 
     /**
-     * Returns the next state of a given <code>item</code>.
+     * Returns the next persisted state of a given <code>item</code>.
+     *
+     * This method has been deprecated and {@link #nextPersistedState(Item)} should be used instead.
      *
      * @param item the item to get the next state value for
      * @return the next state or <code>null</code> if no next state could be found, or if the default
      *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
      */
+    @Deprecated
     public static @Nullable HistoricItem nextState(Item item) {
+        LoggerFactory.getLogger(PersistenceExtensions.class).info(
+                "The nextState method has been deprecated and will be removed in a future version, use nextPersistedState instead.");
         return internalAdjacentState(item, false, true, null);
     }
 
     /**
-     * Returns the next state of a given <code>item</code>.
+     * Returns the next persisted state of a given <code>item</code>.
+     *
+     * This method has been deprecated and {@link #nextPersistedState(Item, boolean)} should be used instead.
      *
      * @param item the item to get the next state value for
      * @param skipEqual if true, skips equal state values and searches the first state not equal the current state
      * @return the next state or <code>null</code> if no next state could be found, or if the default
      *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
      */
+    @Deprecated
     public static @Nullable HistoricItem nextState(Item item, boolean skipEqual) {
+        LoggerFactory.getLogger(PersistenceExtensions.class).info(
+                "The nextState method has been deprecated and will be removed in a future version, use nextPersistedState instead.");
         return internalAdjacentState(item, skipEqual, true, null);
     }
 
     /**
-     * Returns the next state of a given <code>item</code>.
+     * Returns the next persisted state of a given <code>item</code>.
+     * The {@link PersistenceService} identified by the <code>serviceId</code> is used.
+     *
+     * This method has been deprecated and {@link #nextPersistedState(Item, String)} should be used instead.
+     *
+     * @param item the item to get the next state value for
+     * @param serviceId the name of the {@link PersistenceService} to use
+     * @return the next state or <code>null</code> if no next state could be found, or if the default
+     *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
+     */
+    @Deprecated
+    public static @Nullable HistoricItem nextState(Item item, @Nullable String serviceId) {
+        LoggerFactory.getLogger(PersistenceExtensions.class).info(
+                "The nextState method has been deprecated and will be removed in a future version, use nextPersistedState instead.");
+        return internalAdjacentState(item, false, true, serviceId);
+    }
+
+    /**
+     * Returns the next persisted state of a given <code>item</code>.
+     * The {@link PersistenceService} identified by the <code>serviceId</code> is used.
+     *
+     * This method has been deprecated and {@link #nextPersistedState(Item, boolean, String)} should be used instead.
+     *
+     * @param item the item to get the next state value for
+     * @param skipEqual if <code>true</code>, skips equal state values and searches the first state not equal the
+     *            current state
+     * @param serviceId the name of the {@link PersistenceService} to use
+     * @return the next state or <code>null</code> if no next state could be found, or if the given
+     *         <code>serviceId</code> is not available or does not refer to a {@link QueryablePersistenceService}
+     */
+    @Deprecated
+    public static @Nullable HistoricItem nextState(Item item, boolean skipEqual, @Nullable String serviceId) {
+        LoggerFactory.getLogger(PersistenceExtensions.class).info(
+                "The nextState method has been deprecated and will be removed in a future version, use nextPersistedState instead.");
+        return internalAdjacentState(item, skipEqual, true, serviceId);
+    }
+
+    /**
+     * Returns the next persisted state of a given <code>item</code>.
+     *
+     * @param item the item to get the next state value for
+     * @return the next state or <code>null</code> if no next state could be found, or if the default
+     *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
+     */
+    public static @Nullable HistoricItem nextPersistedState(Item item) {
+        return internalAdjacentState(item, false, true, null);
+    }
+
+    /**
+     * Returns the next persisted state of a given <code>item</code>.
+     *
+     * @param item the item to get the next state value for
+     * @param skipEqual if true, skips equal state values and searches the first state not equal the current state
+     * @return the next state or <code>null</code> if no next state could be found, or if the default
+     *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
+     */
+    public static @Nullable HistoricItem nextPersistedState(Item item, boolean skipEqual) {
+        return internalAdjacentState(item, skipEqual, true, null);
+    }
+
+    /**
+     * Returns the next persisted state of a given <code>item</code>.
      * The {@link PersistenceService} identified by the <code>serviceId</code> is used.
      *
      * @param item the item to get the next state value for
@@ -589,12 +726,12 @@ public class PersistenceExtensions {
      * @return the next state or <code>null</code> if no next state could be found, or if the default
      *         persistence service is not configured or does not refer to a {@link QueryablePersistenceService}
      */
-    public static @Nullable HistoricItem nextState(Item item, @Nullable String serviceId) {
+    public static @Nullable HistoricItem nextPersistedState(Item item, @Nullable String serviceId) {
         return internalAdjacentState(item, false, true, serviceId);
     }
 
     /**
-     * Returns the next state of a given <code>item</code>.
+     * Returns the next persisted state of a given <code>item</code>.
      * The {@link PersistenceService} identified by the <code>serviceId</code> is used.
      *
      * @param item the item to get the next state value for
@@ -604,7 +741,7 @@ public class PersistenceExtensions {
      * @return the next state or <code>null</code> if no next state could be found, or if the given
      *         <code>serviceId</code> is not available or does not refer to a {@link QueryablePersistenceService}
      */
-    public static @Nullable HistoricItem nextState(Item item, boolean skipEqual, @Nullable String serviceId) {
+    public static @Nullable HistoricItem nextPersistedState(Item item, boolean skipEqual, @Nullable String serviceId) {
         return internalAdjacentState(item, skipEqual, true, serviceId);
     }
 
