@@ -67,6 +67,7 @@ import org.openhab.core.io.rest.LocaleService;
 import org.openhab.core.io.rest.RESTConstants;
 import org.openhab.core.io.rest.RESTResource;
 import org.openhab.core.io.rest.Stream2JSONInputStream;
+import org.openhab.core.io.rest.Stream2YAMLInputStream;
 import org.openhab.core.io.rest.core.thing.EnrichedThingDTO;
 import org.openhab.core.io.rest.core.thing.EnrichedThingDTOMapper;
 import org.openhab.core.items.ItemFactory;
@@ -302,11 +303,13 @@ public class ThingResource implements RESTResource {
 
     @GET
     @RolesAllowed({ Role.ADMIN })
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON, "application/yaml" })
     @Operation(operationId = "getThings", summary = "Get all available things.", security = {
             @SecurityRequirement(name = "oauth2", scopes = { "admin" }) }, responses = {
-                    @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = EnrichedThingDTO.class), uniqueItems = true))) })
-    public Response getAll(@Context Request request,
+                    @ApiResponse(responseCode = "200", description = "OK", content = {
+                            @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = EnrichedThingDTO.class), uniqueItems = true)),
+                            @Content(mediaType = "application/yaml", array = @ArraySchema(schema = @Schema(implementation = EnrichedThingDTO.class), uniqueItems = true)) }) })
+    public Response getAll(@Context Request request, @Context HttpHeaders httpHeaders,
             @HeaderParam(HttpHeaders.ACCEPT_LANGUAGE) @Parameter(description = "language") @Nullable String language,
             @QueryParam("summary") @Parameter(description = "summary fields only") @Nullable Boolean summary,
             @DefaultValue("false") @QueryParam("staticDataOnly") @Parameter(description = "provides a cacheable list of values not expected to change regularly and checks the If-Modified-Since header") boolean staticDataOnly) {
@@ -334,6 +337,9 @@ public class ThingResource implements RESTResource {
         if (summary != null && summary) {
             thingStream = dtoMapper.limitToFields(thingStream,
                     "UID,label,bridgeUID,thingTypeUID,statusInfo,firmwareStatus,location,editable");
+        }
+        if ("application/yaml".equals(httpHeaders.getHeaderString(HttpHeaders.ACCEPT))) {
+            return Response.ok(new Stream2YAMLInputStream(thingStream)).build();
         }
         return Response.ok(new Stream2JSONInputStream(thingStream)).build();
     }
