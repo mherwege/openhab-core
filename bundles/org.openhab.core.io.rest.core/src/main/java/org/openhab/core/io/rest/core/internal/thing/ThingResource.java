@@ -303,12 +303,13 @@ public class ThingResource implements RESTResource {
 
     @GET
     @RolesAllowed({ Role.ADMIN })
-    @Produces({ MediaType.APPLICATION_JSON, "application/yaml" })
+    @Produces({ MediaType.APPLICATION_JSON, "application/yaml", "application/dsl" })
     @Operation(operationId = "getThings", summary = "Get all available things.", security = {
             @SecurityRequirement(name = "oauth2", scopes = { "admin" }) }, responses = {
                     @ApiResponse(responseCode = "200", description = "OK", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = EnrichedThingDTO.class), uniqueItems = true)),
-                            @Content(mediaType = "application/yaml", array = @ArraySchema(schema = @Schema(implementation = EnrichedThingDTO.class), uniqueItems = true)) }) })
+                            @Content(mediaType = "application/yaml", array = @ArraySchema(schema = @Schema(implementation = EnrichedThingDTO.class), uniqueItems = true)),
+                            @Content(mediaType = "application/dsl", schema = @Schema(example = "DSL example")) }) })
     public Response getAll(@Context Request request, @Context HttpHeaders httpHeaders,
             @HeaderParam(HttpHeaders.ACCEPT_LANGUAGE) @Parameter(description = "language") @Nullable String language,
             @QueryParam("summary") @Parameter(description = "summary fields only") @Nullable Boolean summary,
