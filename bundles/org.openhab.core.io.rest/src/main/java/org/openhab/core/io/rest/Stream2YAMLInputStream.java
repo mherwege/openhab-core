@@ -24,13 +24,11 @@ import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.core.library.types.DateTimeType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 
 /**
  * This {@link InputStream} will stream {@link Stream}s as YAML one item at a time. This will reduce memory usage when
@@ -42,9 +40,7 @@ import com.google.gson.GsonBuilder;
  * @author Jörg Sautter - Use as SequenceInputStream to simplify the logic
  */
 @NonNullByDefault
-public class Stream2YAMLInputStream extends InputStream implements JSONInputStream {
-
-    private static final Gson GSON = new GsonBuilder().setDateFormat(DateTimeType.DATE_PATTERN_WITH_TZ_AND_MS).create();
+public class Stream2YAMLInputStream extends InputStream implements YAMLInputStream {
 
     private final InputStream stream;
 
@@ -54,7 +50,7 @@ public class Stream2YAMLInputStream extends InputStream implements JSONInputStre
      * @param source the {@link Stream} backing this input stream. Must not be null.
      */
     public Stream2YAMLInputStream(Stream<?> source) {
-        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory().disable(Feature.WRITE_DOC_START_MARKER));
         yamlMapper.findAndRegisterModules();
         Iterator<String> iterator = source.map(e -> {
             try {
@@ -65,37 +61,15 @@ public class Stream2YAMLInputStream extends InputStream implements JSONInputStre
         }).iterator();
 
         Enumeration<InputStream> enumeration = new Enumeration<>() {
-            private boolean consumed = false;
-            private @Nullable InputStream next = toStream("[");
-
             @Override
             public boolean hasMoreElements() {
-                return next != null || iterator.hasNext();
+                return iterator.hasNext();
             }
 
             @Override
             public InputStream nextElement() {
-                InputStream is;
-
-                if (next != null) {
-                    is = next;
-                    if (!consumed && !iterator.hasNext()) {
-                        next = toStream("]");
-                        consumed = true;
-                    } else {
-                        next = null;
-                    }
-                    return is;
-                }
-
-                is = toStream(iterator.next());
-
-                if (iterator.hasNext()) {
-                    next = toStream(",");
-                } else {
-                    next = toStream("]");
-                    consumed = true;
-                }
+                String[] data = iterator.next().split("\n");
+                InputStream is = toStream("- " + String.join("\n  ", data));
 
                 return is;
             }
