@@ -27,8 +27,9 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 /**
  * This {@link InputStream} will stream {@link Stream}s as YAML one item at a time. This will reduce memory usage when
@@ -38,6 +39,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
  *
  * @author Henning Treu - Initial contribution
  * @author Jörg Sautter - Use as SequenceInputStream to simplify the logic
+ * @author Mark Herwege - YAML
  */
 @NonNullByDefault
 public class Stream2YAMLInputStream extends InputStream implements YAMLInputStream {
@@ -50,7 +52,8 @@ public class Stream2YAMLInputStream extends InputStream implements YAMLInputStre
      * @param source the {@link Stream} backing this input stream. Must not be null.
      */
     public Stream2YAMLInputStream(Stream<?> source) {
-        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory().disable(Feature.WRITE_DOC_START_MARKER));
+        ObjectMapper yamlMapper = YAMLMapper.builder().disable(Feature.WRITE_DOC_START_MARKER)
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).build();
         yamlMapper.findAndRegisterModules();
         Iterator<String> iterator = source.map(e -> {
             try {
