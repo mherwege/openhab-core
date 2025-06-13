@@ -62,6 +62,7 @@ public class EnrichedItemDTOMapper {
      *
      * @param item the item
      * @param drillDown defines whether the whole tree should be traversed or only direct members are considered
+     * @param includeParents defines if the parent groups of the item should be included in the response
      * @param itemFilter a predicate that filters items while traversing the tree (true means that an item is
      *            considered, can be null)
      * @param uriBuilder if present the URI builder contains one template that will be replaced by the specific item
@@ -125,6 +126,7 @@ public class EnrichedItemDTOMapper {
         if (item instanceof NumberItem numberItem) {
             unitSymbol = numberItem.getUnitSymbol();
         }
+
         if (item instanceof GroupItem groupItem) {
             if (groupItem.getBaseItem() instanceof NumberItem baseNumberItem) {
                 unitSymbol = baseNumberItem.getUnitSymbol();

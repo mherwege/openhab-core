@@ -21,6 +21,7 @@ import org.openhab.core.types.StateDescription;
  * This is an enriched data transfer object that is used to serialize group items.
  *
  * @author Dennis Nobel - Initial contribution
+ * @author Mark Herwege - Added parent groups
  */
 public class EnrichedGroupItemDTO extends EnrichedItemDTO {
 
