@@ -246,7 +246,7 @@ public class ItemResource implements RESTResource {
             @QueryParam("tags") @Parameter(description = "item tag filter") @Nullable String tags,
             @DefaultValue(".*") @QueryParam("metadata") @Parameter(description = "metadata selector - a comma separated list or a regular expression (returns all if no value given)") @Nullable String namespaceSelector,
             @DefaultValue("false") @QueryParam("recursive") @Parameter(description = "get member items recursively") boolean recursive,
-            @DefaultValue("false") @QueryParam("parents") @Parameter(description = "get group items the item directly belongs to") boolean parents,
+            @DefaultValue("false") @QueryParam("parents") @Parameter(description = "get parent group items recursively") boolean parents,
             @QueryParam("fields") @Parameter(description = "limit output to the given fields (comma separated)") @Nullable String fields,
             @DefaultValue("false") @QueryParam("staticDataOnly") @Parameter(description = "provides a cacheable list of values not expected to change regularly and checks the If-Modified-Since header, all other parameters are ignored except \"metadata\"") boolean staticDataOnly) {
         final Locale locale = localeService.getLocale(language);
@@ -268,6 +268,7 @@ public class ItemResource implements RESTResource {
 
             Stream<EnrichedItemDTO> itemStream = getItems(type, tags).stream() //
                     .map(item -> EnrichedItemDTOMapper.map(item, false, null, uriBuilder, locale, zoneId)) //
+                    .peek(dto -> addMetadata(dto, namespaces, null)) //
                     .peek(dto -> dto.editable = isEditable(dto.name));
             itemStream = dtoMapper.limitToFields(itemStream,
                     "name,label,type,groupType,function,category,editable,groupNames,link,tags,metadata,commandDescription,stateDescription");
@@ -288,6 +289,11 @@ public class ItemResource implements RESTResource {
                     if (dto instanceof EnrichedGroupItemDTO enrichedGroupItemDTO) {
                         for (EnrichedItemDTO member : enrichedGroupItemDTO.members) {
                             member.editable = isEditable(member.name);
+                        }
+                    }
+                    if (dto.parents != null) {
+                        for (EnrichedItemDTO parent : dto.parents) {
+                            parent.editable = isEditable(parent.name);
                         }
                     }
                 });
@@ -331,7 +337,7 @@ public class ItemResource implements RESTResource {
             @HeaderParam(HttpHeaders.ACCEPT_LANGUAGE) @Parameter(description = "language") @Nullable String language,
             @DefaultValue(".*") @QueryParam("metadata") @Parameter(description = "metadata selector - a comma separated list or a regular expression (returns all if no value given)") @Nullable String namespaceSelector,
             @DefaultValue("true") @QueryParam("recursive") @Parameter(description = "get member items if the item is a group item") boolean recursive,
-            @DefaultValue("false") @QueryParam("parents") @Parameter(description = "get group items the item directly belongs to") boolean parents,
+            @DefaultValue("false") @QueryParam("parents") @Parameter(description = "get parent group items recursively") boolean parents,
             @PathParam("itemname") @Parameter(description = "item name") String itemname) {
         final Locale locale = localeService.getLocale(language);
         final ZoneId zoneId = timeZoneProvider.getTimeZone();
@@ -344,6 +350,9 @@ public class ItemResource implements RESTResource {
         if (item != null) {
             EnrichedItemDTO dto = EnrichedItemDTOMapper.map(item, recursive, null, uriBuilder(uriInfo, httpHeaders),
                     locale, zoneId);
+            if (parents) {
+                addParents(dto, uriInfo, httpHeaders, locale, zoneId);
+            }
             addMetadata(dto, namespaces, null);
             dto.editable = isEditable(dto.name);
             if (dto instanceof EnrichedGroupItemDTO enrichedGroupItemDTO) {
@@ -351,8 +360,10 @@ public class ItemResource implements RESTResource {
                     member.editable = isEditable(member.name);
                 }
             }
-            if (parents) {
-                addParents(dto, uriInfo, httpHeaders, locale, zoneId);
+            if (dto.parents != null) {
+                for (EnrichedItemDTO parent : dto.parents) {
+                    parent.editable = isEditable(parent.name);
+                }
             }
             return JSONResponse.createResponse(Status.OK, dto, null);
         } else {
@@ -1039,6 +1050,11 @@ public class ItemResource implements RESTResource {
                 addMetadata(member, namespaces, filter);
             }
         }
+        if (dto.parents != null) {
+            for (EnrichedItemDTO parent : dto.parents) {
+                addMetadata(parent, namespaces, filter);
+            }
+        }
         if (!metadata.isEmpty()) {
             // we only set it in the dto if there is really data available
             dto.metadata = metadata;
@@ -1047,12 +1063,12 @@ public class ItemResource implements RESTResource {
 
     private void addParents(EnrichedItemDTO dto, UriInfo uriInfo, HttpHeaders httpHeaders, Locale locale,
             ZoneId zoneId) {
-        List<String> groupNames = dto.groupNames;
-        Stream<EnrichedItemDTO> parentItemDTOs = groupNames.stream() //
+        dto.parents = dto.groupNames.stream() //
                 .map(groupName -> getItem(groupName)).filter(Objects::nonNull) //
                 .map(parentItem -> EnrichedItemDTOMapper.map(parentItem, false, null, uriBuilder(uriInfo, httpHeaders),
-                        locale, zoneId));
-        dto.parents = parentItemDTOs.toArray(size -> new EnrichedItemDTO[size]);
+                        locale, zoneId)) //
+                .peek(parentEnrichedItemDto -> addParents(parentEnrichedItemDto, uriInfo, httpHeaders, locale, zoneId)) //
+                .toArray(size -> new EnrichedItemDTO[size]);
     }
 
     private boolean isEditable(String itemName) {
